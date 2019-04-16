@@ -25,7 +25,4 @@ const genDif = (filepath1, filepath2) => {
   return `${answer}}`;
 };
 
-genDif('/home/andrey/Desktop/pr2/__tests__/__fixtures__/before.json',
-'__tests__/__fixtures__/after.json');
-
 export default genDif;
