@@ -1,26 +1,34 @@
 import _ from 'lodash/fp';
 import fs from 'fs';
 import path from 'path';
+import parseData from './parsers';
+
+const getFileData = (filepath) => {
+  const configPath = path.resolve(filepath);
+  const data = fs.readFileSync(configPath, 'utf-8');
+  const ext = path.extname(configPath);
+  return parseData(ext, data);
+};
 
 const genDif = (filepath1, filepath2) => {
-  const firstJson = JSON.parse(fs.readFileSync(path.resolve(filepath1), 'utf-8'));
-  const secondJson = JSON.parse(fs.readFileSync(path.resolve(filepath2), 'utf-8'));
-  const firstFileKeys = Object.keys(firstJson);
-  const secondFileKeys = Object.keys(secondJson);
+  const firstFile = getFileData(filepath1);
+  const secondFile = getFileData(filepath2);
+  const firstFileKeys = Object.keys(firstFile);
+  const secondFileKeys = Object.keys(secondFile);
   const allKeys = firstFileKeys.concat(secondFileKeys
-    .filter(key => !_.has(key, firstJson)));
+    .filter(key => !_.has(key, firstFile)));
   const answer = allKeys
     .reduce((acc, key) => {
-      if (_.has(key, firstJson) && !_.has(key, secondJson)) {
-        return `${acc}  - ${key}: ${firstJson[key]}\n`;
+      if (_.has(key, firstFile) && !_.has(key, secondFile)) {
+        return `${acc}  - ${key}: ${firstFile[key]}\n`;
       }
-      if (!_.has(key, firstJson) && _.has(key, secondJson)) {
-        return `${acc}  + ${key}: ${secondJson[key]}\n`;
+      if (!_.has(key, firstFile) && _.has(key, secondFile)) {
+        return `${acc}  + ${key}: ${secondFile[key]}\n`;
       }
-      if (firstJson[key] === secondJson[key]) {
-        return `${acc}    ${key}: ${secondJson[key]}\n`;
+      if (firstFile[key] === secondFile[key]) {
+        return `${acc}    ${key}: ${secondFile[key]}\n`;
       }
-      return `${acc}  - ${key}: ${firstJson[key]}\n  + ${key}: ${secondJson[key]}\n`;
+      return `${acc}  - ${key}: ${firstFile[key]}\n  + ${key}: ${secondFile[key]}\n`;
     }, '{\n');
   return `${answer}}`;
 };

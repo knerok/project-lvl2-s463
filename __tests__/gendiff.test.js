@@ -7,3 +7,10 @@ test('first test', () => {
     '__tests__/__fixtures__/after.json'))
     .toBe(result);
 });
+
+test('second test', () => {
+  const result = fs.readFileSync('__tests__/__fixtures__/result2.txt', 'utf-8');
+  expect(genDiff('__tests__/__fixtures__/before.yml',
+    '__tests__/__fixtures__/after.yml'))
+    .toBe(result);
+});
