@@ -69,12 +69,6 @@ const genDif = (filepath1, filepath2) => {
   const answer = `{\n${diffAstTree.map(el => render(el, 2)).join('\n')}\n}`;
   return answer;
 };
-/*
-fs.writeFileSync('__tests__/__fixtures__/result5.txt',genDif('/home/andrey/Desktop/pr2/__tests__/__fixtures__/before1.json',
-  '__tests__/__fixtures__/after1.json'));
 
-  fs.writeFileSync('__tests__/__fixtures__/result3.txt',genDif('/home/andrey/Desktop/pr2/__tests__/__fixtures__/before.json',
-    '__tests__/__fixtures__/after.json'));
-*/
 
 export default genDif;
