@@ -40,3 +40,10 @@ test.each(arr)(
     expect(genDiff(filepath1, filepath2)).toBe(result);
   },
 );
+
+test('fith test', () => {
+  const result = fs.readFileSync('__tests__/__fixtures__/result5.txt', 'utf-8');
+  expect(genDiff('__tests__/__fixtures__/before1.json',
+    '__tests__/__fixtures__/after1.json'))
+    .toBe(result);
+});
