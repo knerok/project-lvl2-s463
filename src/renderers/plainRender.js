@@ -1,5 +1,5 @@
 
-const iter = (acc, data, path) => {
+const generatePlain = (accMain, data, path) => {
   const {
     key,
     value,
@@ -10,22 +10,22 @@ const iter = (acc, data, path) => {
   const valueBefore = (value instanceof Object) ? '[complex value]' : value;
   const valueAfter = (newValue instanceof Object) ? '[complex value]' : newValue;
   const pureKey = key.slice(2, key.length);
-  if (oldValue) return acc;
+  if (oldValue) return accMain;
   if (newValue) {
-    return [...acc, `Property '${path}${pureKey}' was updated. From ${valueBefore} to ${valueAfter}`];
+    return [...accMain, `Property '${path}${pureKey}' was updated. From ${valueBefore} to ${valueAfter}`];
   }
   if (key[0] === '+') {
-    return [...acc, `Property '${path}${pureKey}' was added with value: ${valueBefore}`];
+    return [...accMain, `Property '${path}${pureKey}' was added with value: ${valueBefore}`];
   }
   if (key[0] === '-') {
-    return [...acc, `Property '${path}${pureKey}' was removed`];
+    return [...accMain, `Property '${path}${pureKey}' was removed`];
   }
   if (children) {
-    return children.reduce((accum, el) => iter(accum, el, `${path}${pureKey}.`), acc);
+    return children.reduce((acc, el) => generatePlain(acc, el, `${path}${pureKey}.`), accMain);
   }
-  return acc;
+  return accMain;
 };
 
-const render = data => data.reduce((acc, el) => iter(acc, el, ''), []).filter(el => el !== '').join('\n');
+const render = data => data.reduce((acc, el) => generatePlain(acc, el, ''), []).filter(el => el !== '').join('\n');
 
 export default render;

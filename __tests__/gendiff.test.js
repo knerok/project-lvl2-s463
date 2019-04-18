@@ -41,9 +41,16 @@ test.each(arr)(
   },
 );
 
-test('fith test', () => {
+test('fifth test', () => {
   const result = fs.readFileSync('__tests__/__fixtures__/result5.txt', 'utf-8');
   expect(genDiff('__tests__/__fixtures__/before1.json',
     '__tests__/__fixtures__/after1.json'))
+    .toBe(result);
+});
+
+test('sixth test', () => {
+  const result = fs.readFileSync('__tests__/__fixtures__/result6.txt', 'utf-8');
+  expect(genDiff('__tests__/__fixtures__/before1.json',
+    '__tests__/__fixtures__/after1.json', 'plain'))
     .toBe(result);
 });

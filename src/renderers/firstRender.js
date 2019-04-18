@@ -9,15 +9,17 @@ const stringify = (value, depth) => {
   return answer;
 };
 
-const render = (data, depth) => {
+const buildJson = (data, depth) => {
   const { key, value, children } = data;
   if (children) {
-    return `${' '.repeat(depth)}${key}: {\n${children.map(el => render(el, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`;
+    return `${' '.repeat(depth)}${key}: {\n${children.map(el => buildJson(el, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`;
   }
   if (value instanceof Object) {
     return `${' '.repeat(depth)}${key}: {\n${stringify(value, depth + 6)}\n${' '.repeat(depth + 2)}}`;
   }
   return `${' '.repeat(depth)}${key}: ${value}`;
 };
+
+const render = data => `{\n${data.map(el => buildJson(el, 2)).join('\n')}\n}`;
 
 export default render;

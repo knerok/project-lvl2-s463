@@ -2,10 +2,8 @@ import _ from 'lodash/fp';
 import fs from 'fs';
 import path from 'path';
 import parseData from './parsers';
-import render from './renderers/firstRender';
-/*
-import plainRender from './renderers/plainRender';
-*/
+import renderJson from './renderers/firstRender';
+import renderPlain from './renderers/plainRender';
 
 const getFileData = (filepath) => {
   const configPath = path.resolve(filepath);
@@ -44,20 +42,16 @@ const buildAst = (obj1, obj2) => {
   return astTree;
 };
 
-const genDif = (filepath1, filepath2) => {
+const renderers = {
+  JSON: renderJson,
+  plain: renderPlain,
+};
+
+const genDif = (filepath1, filepath2, format = 'JSON') => {
   const firstFile = getFileData(filepath1);
   const secondFile = getFileData(filepath2);
-  const diffAstTree = buildAst(firstFile, secondFile);
-  return `{\n${diffAstTree.map(el => render(el, 2)).join('\n')}\n}`;
-  /*
-  switch (type) {
-    case ('plain'):
-    rendered = plainRender(diffAstTree);
-    break;
-      default:
-      rendered = `{\n${diffAstTree.map(el => render(el, 2)).join('\n')}\n}`;
-    return rendered; }
-    */
+  const astTree = buildAst(firstFile, secondFile);
+  return renderers[format](astTree);
 };
 
 export default genDif;
