@@ -10,8 +10,8 @@ const generatePlain = (accMain, data, path) => {
   const valueBefore = (value instanceof Object) ? '[complex value]' : value;
   const valueAfter = (newValue instanceof Object) ? '[complex value]' : newValue;
   const pureKey = key.slice(2, key.length);
-  if (oldValue) return accMain;
-  if (newValue) {
+  if (oldValue !== undefined) return accMain;
+  if (newValue !== undefined) {
     return [...accMain, `Property '${path}${pureKey}' was updated. From ${valueBefore} to ${valueAfter}`];
   }
   if (key[0] === '+') {

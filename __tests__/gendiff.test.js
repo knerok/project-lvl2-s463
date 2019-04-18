@@ -54,3 +54,17 @@ test('sixth test', () => {
     '__tests__/__fixtures__/after1.json', 'plain'))
     .toBe(result);
 });
+
+test('seventh test', () => {
+  const result = fs.readFileSync('__tests__/__fixtures__/result7.txt', 'utf-8');
+  expect(genDiff('__tests__/__fixtures__/before.json',
+    '__tests__/__fixtures__/after.json', 'JSON'))
+    .toBe(result);
+});
+
+test('eight test', () => {
+  const result = fs.readFileSync('__tests__/__fixtures__/result8.txt', 'utf-8');
+  expect(genDiff('__tests__/__fixtures__/before1.json',
+    '__tests__/__fixtures__/after1.json', 'JSON'))
+    .toBe(result);
+});

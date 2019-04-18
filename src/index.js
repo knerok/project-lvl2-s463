@@ -43,11 +43,12 @@ const buildAst = (obj1, obj2) => {
 };
 
 const renderers = {
-  JSON: renderJson,
+  classic: renderJson,
   plain: renderPlain,
+  JSON: JSON.stringify,
 };
 
-const genDif = (filepath1, filepath2, format = 'JSON') => {
+const genDif = (filepath1, filepath2, format = 'classic') => {
   const firstFile = getFileData(filepath1);
   const secondFile = getFileData(filepath2);
   const astTree = buildAst(firstFile, secondFile);
