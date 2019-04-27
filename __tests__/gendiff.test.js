@@ -22,7 +22,7 @@ test('third test', () => {
     .toBe(result);
 });
 
-const arr = [
+const testsData = [
   ['__tests__/__fixtures__/before.json',
     '__tests__/__fixtures__/after.json',
     '__tests__/__fixtures__/result1.txt'],
@@ -33,7 +33,7 @@ const arr = [
     '__tests__/__fixtures__/after.ini',
     '__tests__/__fixtures__/result3.txt']];
 
-test.each(arr)(
+test.each(testsData)(
   'fourth test',
   (filepath1, filepath2, resultpath) => {
     const result = fs.readFileSync(resultpath, 'utf-8');
@@ -58,13 +58,13 @@ test('sixth test', () => {
 test('seventh test', () => {
   const result = fs.readFileSync('__tests__/__fixtures__/result7.txt', 'utf-8');
   expect(genDiff('__tests__/__fixtures__/before.json',
-    '__tests__/__fixtures__/after.json', 'JSON'))
+    '__tests__/__fixtures__/after.json', 'json'))
     .toBe(result);
 });
 
 test('eight test', () => {
   const result = fs.readFileSync('__tests__/__fixtures__/result8.txt', 'utf-8');
   expect(genDiff('__tests__/__fixtures__/before1.json',
-    '__tests__/__fixtures__/after1.json', 'JSON'))
+    '__tests__/__fixtures__/after1.json', 'json'))
     .toBe(result);
 });

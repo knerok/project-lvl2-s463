@@ -1,7 +1,7 @@
 install: install-deps
 
 install-deps:
-	sudo npm install
+	npm install
 
 publish:
 	npm publish
