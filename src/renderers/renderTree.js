@@ -1,39 +1,29 @@
-const signs = {
-  deleted: '- ',
-  added: '+ ',
-  equal: '  ',
-  changed: '- ',
-  complex: '  ',
-};
 
 const stringify = (value, depth) => {
   if (!(value instanceof Object)) {
     return `${value}`;
   }
   const keys = Object.keys(value);
-  const answer = keys.map(key => `${' '.repeat(depth)}${key}: ${stringify(value[key], depth + 4)}`)
+  const answer = keys.map(key => `${' '.repeat(depth + 6)}${key}: ${stringify(value[key], depth + 4)}`)
     .join('\n');
-  return `{\n${answer}\n${' '.repeat(depth - 4)}}`;
+  return `{\n${answer}\n${' '.repeat(depth + 2)}}`;
 };
 
-const buildClassic = (data, depth) => {
-  const {
-    type,
-    key,
-    value,
-    children,
-    oldValue,
-    newValue,
-  } = data;
-  const sign = signs[type];
-  if (children) {
-    return `${' '.repeat(depth)}${sign}${key}: {\n${children.map(el => buildClassic(el, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`;
-  }
-  const valueForRender = (oldValue || value);
-  const newValueLine = type === 'changed' ? `\n${' '.repeat(depth)}+ ${key}: ${stringify(newValue, depth + 6)}` : '';
-  return `${' '.repeat(depth)}${sign}${key}: ${stringify(valueForRender, depth + 6)}${newValueLine}`;
+const renderersForNodes = {
+  deleted: ({ key, value }, depth) => (`- ${key}: ${stringify(value, depth)}`),
+  added: ({ key, value }, depth) => (`+ ${key}: ${stringify(value, depth)}`),
+  complex: ({ key, children }, depth, f) => (`  ${key}: {\n${children.map(el => f(el, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`),
+  changed: ({ key, oldValue, newValue }, depth) => (`- ${key}: ${stringify(oldValue, depth)}\n${' '.repeat(depth)}+ ${key}: ${stringify(newValue, depth)}`),
+  equal: ({ key, value }, depth) => (`  ${key}: ${stringify(value, depth)}`),
 };
 
-const render = data => `{\n${data.map(el => buildClassic(el, 2)).join('\n')}\n}`;
+const generateTree = (data, depth) => {
+  const { type } = data;
+  const renderedNode = renderersForNodes[type](data, depth, generateTree);
+  const indent = ' '.repeat(depth);
+  return `${indent}${renderedNode}`;
+};
+
+const render = data => `{\n${data.map(el => generateTree(el, 2)).join('\n')}\n}`;
 
 export default render;

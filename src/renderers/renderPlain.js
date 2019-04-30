@@ -1,32 +1,15 @@
-/*
-const propertyActions = [
-  {
-    process: (accMain, currentPath, valueMain, valueBefore, valueAfter) =>
-    [...accMain, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`],
-    check: type => (type === 'changed'),
-  },
-  {
-    process: (accMain, currentPath, valueMain) =>
-    [...accMain, `Property '${currentPath}' was added with value: ${valueMain}`],
-    check: type => (type === 'added'),
-  },
-  {
-    process: (accMain, currentPath) => [...accMain, `Property '${currentPath}' was removed`],
-    check: type => (type === 'deleted'),
-  },
-  {
-    process: accMain => accMain,
-    check: () => true,
-  },
-];
-*/
 
-const propertyActions = {
-  deleted: (accMain, currentPath) => [...accMain, `Property '${currentPath}' was removed`],
-  added: (accMain, currentPath, valueMain) => [...accMain, `Property '${currentPath}' was added with value: ${valueMain}`],
-  equal: accMain => accMain,
-  changed: (accMain, currentPath, valueMain, valueBefore, valueAfter) => [...accMain, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`],
-  complex: accMain => accMain,
+const renderersForNodes = {
+  deleted: ({ accMain, currentPath }) => ([...accMain, `Property '${currentPath}' was removed`]),
+  added: ({ accMain, currentPath, valueMain }) => ([...accMain, `Property '${currentPath}' was added with value: ${valueMain}`]),
+  complex: ({ accMain, currentPath, children }, f) => (children.reduce((acc, child) => f(acc, child, `${currentPath}.`), accMain)),
+  changed: ({
+    accMain,
+    currentPath,
+    valueBefore,
+    valueAfter,
+  }) => ([...accMain, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`]),
+  equal: ({ accMain }) => accMain,
 };
 
 const generatePlain = (accMain, el, path) => {
@@ -34,21 +17,25 @@ const generatePlain = (accMain, el, path) => {
     type,
     key,
     value,
-    children,
     newValue,
     oldValue,
+    children,
   } = el;
   const valueMain = (value instanceof Object) ? '[complex value]' : value;
   const valueBefore = (oldValue instanceof Object) ? '[complex value]' : oldValue;
   const valueAfter = (newValue instanceof Object) ? '[complex value]' : newValue;
   const currentPath = `${path}${key}`;
-  if (children) {
-    return children.reduce((acc, child) => generatePlain(acc, child, `${currentPath}.`), accMain);
-  }
-  const process = propertyActions[type];
-  return process(accMain, currentPath, valueMain, valueBefore, valueAfter);
+  const renderedNode = renderersForNodes[type]({
+    accMain,
+    currentPath,
+    valueMain,
+    valueBefore,
+    valueAfter,
+    children,
+  }, generatePlain);
+  return renderedNode;
 };
 
-const render = data => data.reduce((acc, el) => generatePlain(acc, el, ''), []).filter(el => el !== '').join('\n');
+const render = data => data.reduce((acc, el) => generatePlain(acc, el, ''), []).join('\n');
 
 export default render;

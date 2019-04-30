@@ -2,7 +2,7 @@ import _ from 'lodash/fp';
 import fs from 'fs';
 import path from 'path';
 import parseData from './parsers';
-import renderData from './renderers/renderers';
+import renderData from './renderers';
 
 const getFileData = (filepath) => {
   const configPath = path.resolve(filepath);
@@ -13,60 +13,59 @@ const getFileData = (filepath) => {
 
 const propertyActions = [
   {
-    type: 'deleted',
-    value: (obj1, obj2, arg) => obj1[arg],
-    check: (obj1, obj2, arg) => (_.has(arg, obj1) && !_.has(arg, obj2)),
+    check: (obj1, obj2, key) => (_.has(key, obj1) && !_.has(key, obj2)),
+    process: (obj1, obj2, key) => ({
+      type: 'deleted',
+      key,
+      value: obj1[key],
+    }),
   },
   {
-    type: 'added',
-    value: (obj1, obj2, arg) => obj2[arg],
-    check: (obj1, obj2, arg) => (!_.has(arg, obj1) && _.has(arg, obj2)),
+    check: (obj1, obj2, key) => (!_.has(key, obj1) && _.has(key, obj2)),
+    process: (obj1, obj2, key) => ({
+      type: 'added',
+      key,
+      value: obj2[key],
+    }),
   },
   {
-    type: 'equal',
-    children: (obj1, obj2, arg, f) => f(obj1[arg], obj2[arg]),
-    check: (obj1, obj2, arg) => (obj1[arg] instanceof Object && obj2[arg] instanceof Object),
+    check: (obj1, obj2, key) => (obj1[key] instanceof Object && obj2[key] instanceof Object),
+    process: (obj1, obj2, key, f) => ({
+      type: 'complex',
+      key,
+      children: f(obj1[key], obj2[key]),
+    }),
   },
   {
-    type: 'complex',
-    value: (obj1, obj2, arg) => obj2[arg],
-    check: (obj1, obj2, arg) => (obj1[arg] === obj2[arg]),
+    check: (obj1, obj2, key) => (obj1[key] === obj2[key]),
+    process: (obj1, obj2, key) => ({
+      type: 'equal',
+      key,
+      value: obj2[key],
+    }),
   },
   {
-    type: 'changed',
-    oldValue: (obj1, obj2, arg) => obj1[arg],
-    newValue: (obj1, obj2, arg) => obj2[arg],
     check: () => true,
+    process: (obj1, obj2, key) => ({
+      type: 'changed',
+      key,
+      oldValue: obj1[key],
+      newValue: obj2[key],
+    }),
   },
 ];
 
-const getPropertyAction = (obj1, obj2, arg) => propertyActions
-  .find(({ check }) => check(obj1, obj2, arg));
+const getPropertyAction = (obj1, obj2, key) => propertyActions
+  .find(({ check }) => check(obj1, obj2, key));
 
 const buildAst = (obj1, obj2) => {
-  const obj1Keys = Object.keys(obj1);
-  const obj2Keys = Object.keys(obj2);
-  const allDiffKeys = obj1Keys.concat(obj2Keys
-    .filter(key => !_.has(key, obj1)));
+  const allDiffKeys = _.union(Object.keys(obj1), Object.keys(obj2));
   const astTree = allDiffKeys.sort()
     .reduce((acc, el) => {
-      const {
-        type,
-        value = () => undefined,
-        oldValue = () => undefined,
-        newValue = () => undefined,
-        children = () => undefined,
-      } = getPropertyAction(obj1, obj2, el);
-      return [...acc,
-        {
-          type,
-          key: el,
-          value: value(obj1, obj2, el),
-          children: children(obj1, obj2, el, buildAst),
-          oldValue: oldValue(obj1, obj2, el),
-          newValue: newValue(obj1, obj2, el),
-        }];
-    }, []);
+      const { process } = getPropertyAction(obj1, obj2, el);
+      return [...acc, process(obj1, obj2, el, buildAst)];
+    },
+    []);
   return astTree;
 };
 
@@ -74,7 +73,7 @@ const genDif = (filepathBefore, filepathAfter, format = 'tree') => {
   const fileContentBefore = getFileData(filepathBefore);
   const fileContentAfter = getFileData(filepathAfter);
   const astTree = buildAst(fileContentBefore, fileContentAfter);
-  return renderData[format](astTree);
+  return renderData(format, astTree);
 };
 
 export default genDif;

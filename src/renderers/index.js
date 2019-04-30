@@ -7,4 +7,6 @@ const renderers = {
   json: JSON.stringify,
 };
 
-export default renderers;
+const render = (format, astTree) => renderers[format](astTree);
+
+export default render;
