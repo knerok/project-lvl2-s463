@@ -1,21 +1,20 @@
 import { flattenDeep } from 'lodash/fp';
 
 const renderersForNodes = {
-  deleted: ({ acc, currentPath }) => ([...acc, `Property '${currentPath}' was removed`]),
-  added: ({ acc, currentPath, valueMain }) => ([...acc, `Property '${currentPath}' was added with value: ${valueMain}`]),
-  complex: ({ acc, currentPath, children }, generatePlain) => ([...acc, generatePlain(children, `${currentPath}.`)]),
+  deleted: ({ currentPath }) => (`Property '${currentPath}' was removed`),
+  added: ({ currentPath, valueMain }) => (`Property '${currentPath}' was added with value: ${valueMain}`),
+  complex: ({ currentPath, children }, generatePlain) => (generatePlain(children, `${currentPath}.`)),
   changed: ({
-    acc,
     currentPath,
     valueBefore,
     valueAfter,
-  }) => ([...acc, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`]),
-  equal: ({ acc }) => acc,
+  }) => (`Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`),
+  equal: () => (null),
 };
 
 const renderValue = value => ((value instanceof Object) ? '[complex value]' : value);
 
-const generatePlain = (data, path) => data.reduce((acc, el) => {
+const generatePlain = (data, path) => data.map((el) => {
   const {
     type,
     key,
@@ -29,7 +28,6 @@ const generatePlain = (data, path) => data.reduce((acc, el) => {
   const valueAfter = renderValue(newValue);
   const currentPath = `${path}${key}`;
   const renderedNode = renderersForNodes[type]({
-    acc,
     currentPath,
     valueMain,
     valueBefore,
@@ -37,8 +35,8 @@ const generatePlain = (data, path) => data.reduce((acc, el) => {
     children,
   }, generatePlain);
   return renderedNode;
-}, []);
+});
 
-const render = data => flattenDeep(generatePlain(data, '')).join('\n');
+const render = data => flattenDeep(generatePlain(data, '')).filter(el => el).join('\n');
 
 export default render;
