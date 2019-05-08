@@ -1,3 +1,4 @@
+import { flattenDeep } from 'lodash/fp';
 
 const stringify = (value, depth) => {
   if (!(value instanceof Object)) {
@@ -10,20 +11,21 @@ const stringify = (value, depth) => {
 };
 
 const renderersForNodes = {
-  deleted: ({ key, value }, depth) => (`- ${key}: ${stringify(value, depth)}`),
-  added: ({ key, value }, depth) => (`+ ${key}: ${stringify(value, depth)}`),
-  complex: ({ key, children }, depth, f) => (`  ${key}: {\n${children.map(el => f(el, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`),
-  changed: ({ key, oldValue, newValue }, depth) => (`- ${key}: ${stringify(oldValue, depth)}\n${' '.repeat(depth)}+ ${key}: ${stringify(newValue, depth)}`),
-  equal: ({ key, value }, depth) => (`  ${key}: ${stringify(value, depth)}`),
+  deleted: ({ key, value }, depth, indent) => (`${indent}- ${key}: ${stringify(value, depth)}`),
+  added: ({ key, value }, depth, indent) => (`${indent}+ ${key}: ${stringify(value, depth)}`),
+  complex: ({ key, children }, depth, indent, generateTree) => (`${indent}  ${key}: {\n${flattenDeep(generateTree(children, depth + 4)).join('\n')}\n${' '.repeat(depth + 2)}}`),
+  changed: ({ key, oldValue, newValue }, depth, indent) => [`${indent}- ${key}: ${stringify(oldValue, depth)}`,
+    `${indent}+ ${key}: ${stringify(newValue, depth)}`],
+  equal: ({ key, value }, depth, indent) => (`${indent}  ${key}: ${stringify(value, depth)}`),
 };
 
-const generateTree = (data, depth) => {
-  const { type } = data;
-  const renderedNode = renderersForNodes[type](data, depth, generateTree);
+const generateTree = (data, depth) => data.map((el) => {
+  const { type } = el;
   const indent = ' '.repeat(depth);
-  return `${indent}${renderedNode}`;
-};
+  const renderedNode = renderersForNodes[type](el, depth, indent, generateTree);
+  return renderedNode;
+});
 
-const render = data => `{\n${data.map(el => generateTree(el, 2)).join('\n')}\n}`;
+const render = data => `{\n${flattenDeep(generateTree(data, 2)).join('\n')}\n}`;
 
 export default render;

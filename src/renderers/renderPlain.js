@@ -1,18 +1,21 @@
+import { flattenDeep } from 'lodash/fp';
 
 const renderersForNodes = {
-  deleted: ({ accMain, currentPath }) => ([...accMain, `Property '${currentPath}' was removed`]),
-  added: ({ accMain, currentPath, valueMain }) => ([...accMain, `Property '${currentPath}' was added with value: ${valueMain}`]),
-  complex: ({ accMain, currentPath, children }, f) => (children.reduce((acc, child) => f(acc, child, `${currentPath}.`), accMain)),
+  deleted: ({ acc, currentPath }) => ([...acc, `Property '${currentPath}' was removed`]),
+  added: ({ acc, currentPath, valueMain }) => ([...acc, `Property '${currentPath}' was added with value: ${valueMain}`]),
+  complex: ({ acc, currentPath, children }, generatePlain) => ([...acc, generatePlain(children, `${currentPath}.`)]),
   changed: ({
-    accMain,
+    acc,
     currentPath,
     valueBefore,
     valueAfter,
-  }) => ([...accMain, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`]),
-  equal: ({ accMain }) => accMain,
+  }) => ([...acc, `Property '${currentPath}' was updated. From ${valueBefore} to ${valueAfter}`]),
+  equal: ({ acc }) => acc,
 };
 
-const generatePlain = (accMain, el, path) => {
+const renderValue = value => ((value instanceof Object) ? '[complex value]' : value);
+
+const generatePlain = (data, path) => data.reduce((acc, el) => {
   const {
     type,
     key,
@@ -21,12 +24,12 @@ const generatePlain = (accMain, el, path) => {
     oldValue,
     children,
   } = el;
-  const valueMain = (value instanceof Object) ? '[complex value]' : value;
-  const valueBefore = (oldValue instanceof Object) ? '[complex value]' : oldValue;
-  const valueAfter = (newValue instanceof Object) ? '[complex value]' : newValue;
+  const valueMain = renderValue(value);
+  const valueBefore = renderValue(oldValue);
+  const valueAfter = renderValue(newValue);
   const currentPath = `${path}${key}`;
   const renderedNode = renderersForNodes[type]({
-    accMain,
+    acc,
     currentPath,
     valueMain,
     valueBefore,
@@ -34,8 +37,8 @@ const generatePlain = (accMain, el, path) => {
     children,
   }, generatePlain);
   return renderedNode;
-};
+}, []);
 
-const render = data => data.reduce((acc, el) => generatePlain(acc, el, ''), []).join('\n');
+const render = data => flattenDeep(generatePlain(data, '')).join('\n');
 
 export default render;
